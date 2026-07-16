@@ -1072,13 +1072,23 @@ function attivaMappaDaItinerario() {
         maxZoom: maxZoomConsentito
     }).setView(limitiMappa.getCenter(), zoomIniziale); // Centra automaticamente sul cuore dell'itinerario
 
-    // 4. Carichiamo i tasselli offline dalla cartella definita nel CSV
-    L.tileLayer(`${percorsoMappa}/{z}/{x}/{y}.png`, {
-        minZoom: minZoomConsentito,
-        maxZoom: maxZoomConsentito,
-        attribution: 'Mappa Offline Cicerone',
-        errorTileUrl: 'Leaflet/images/no-tile.png'
-    }).addTo(mappaLeafletIstanza);
+    // 4. Carichiamo i tasselli offline forzando il percorso relativo alla cartella dell'app
+// Se nel CSV c'è scritto ad esempio "mappe-offline", questo diventerà "./mappe-offline/{z}/{x}/{y}.png"
+let percorsoMappaReale = percorsoMappa;
+
+// Rimuove eventuali slash iniziali o percorsi assoluti per renderlo relativo
+if (percorsoMappaReale.startsWith('/')) {
+    percorsoMappaReale = '.' + percorsoMappaReale;
+} else if (!percorsoMappaReale.startsWith('./')) {
+    percorsoMappaReale = './' + percorsoMappaReale;
+}
+
+L.tileLayer(`${percorsoMappaReale}/{z}/{x}/{y}.png`, {
+    minZoom: minZoomConsentito,
+    maxZoom: maxZoomConsentito,
+    attribution: 'Mappa Offline Cicerone',
+    errorTileUrl: './Leaflet/images/no-tile.png' // Aggiunto il punto "./" anche qui
+}).addTo(mappaLeafletIstanza);
 
     // 5. Disegniamo i marker
     tappeConCoordinate.forEach(t => {
@@ -1110,10 +1120,20 @@ function attivaMappaDaItinerario() {
         let percorsoMappa = (nomeCartella && nomeCartella.trim() !== "") ? nomeCartella.trim() : 'mappe-offline/Rieti';
 
         // MODIFICA TEST: Estensione forzata su .png in conformità con i file fisici estratti
-        L.tileLayer(`${percorsoMappa}/{z}/{x}/{y}.png`, { 
-            maxZoom: 19, 
-            attribution: 'Mappa Monumento' 
-        }).addTo(mappaLeafletIstanza);
+let percorsoMappaRealeTest = percorsoMappa;
+
+// Forza il percorso relativo inserendo il punto "./" se manca
+if (percorsoMappaRealeTest.startsWith('/')) {
+    percorsoMappaRealeTest = '.' + percorsoMappaRealeTest;
+} else if (!percorsoMappaRealeTest.startsWith('./')) {
+    percorsoMappaRealeTest = './' + percorsoMappaRealeTest;
+}
+
+L.tileLayer(`${percorsoMappaRealeTest}/{z}/{x}/{y}.png`, { 
+    maxZoom: 19, 
+    attribution: 'Mappa Monumento',
+    errorTileUrl: './Leaflet/images/no-tile.png' // Ti consiglio di aggiungere questo per evitare rettangoli grigi se manca un tassello
+}).addTo(mappaLeafletIstanza);
 
         L.marker([lat, lng], { icon: iconaMarkerOffline }).addTo(mappaLeafletIstanza)
          .bindPopup(`<b>${titoloMonumento}</b>`)
