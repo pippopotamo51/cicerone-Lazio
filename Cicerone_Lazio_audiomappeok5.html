@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cicerone Virtuale AI</title>
+    <link rel="manifest" href="manifest.json">  
+    <link rel="stylesheet" href="Leaflet/leaflet.css" />
+    <script src="Leaflet/leaflet.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f12;
+            color: #ffffff;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 500px;
+            min-height: 90vh;
+            background: #16161a;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #2a2a35;
+            padding-bottom: 15px;
+        }
+
+        h1, h2, h3 {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        h1 { font-size: 1.8rem; text-align: center; margin-bottom: 10px; }
+        h2 { font-size: 1.5rem; }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #24243e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .btn-inline-crono {
+            background-color: #27ae60;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            width: auto;
+        }
+
+        .btn-map-extra {
+            background-color: #d35400;
+            color: white;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: auto;
+        }
+
+        .btn-map-city {
+            background-color: #2980b9;
+            color: white;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: auto;
+        }
+
+        .map-buttons-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: #dfa81c;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card {
+            background: #22222b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid #2a2a35;
+            transition: transform 0.2s, background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+            background-color: #2a2a38;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .card-sub {
+            font-size: 0.9rem;
+            color: #9a9aab;
+        }
+
+        .sublevel-indicator {
+            background-color: #dfa81c;
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+
+        .image-container {
+            width: 100%;
+            max-height: 250px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            max-height: 230px;
+            object-fit: cover;
+        }
+
+        .error-photo-debug {
+            color: #ff4a4a;
+            font-size: 0.85rem;
+            font-family: monospace;
+            background: rgba(255,0,0,0.1);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px dashed #ff4a4a;
+            text-align: center;
+            width: 100%;
+        }
+
+        .desc-box {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #2a2a35;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        #map-view-box {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #2a2a35;
+            background-color: #111;
+            z-index: 1;
+        }
+
+        .viewer-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            padding: 60px 15px 20px 15px;
+        }
+
+        .viewer-modal img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+        }
+
+        .viewer-header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(22, 22, 26, 0.9);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a35;
+            z-index: 10000;
+        }
+
+        .viewer-close {
+            background: #dfa81c;
+            color: black;
+            border: none;
+            padding: 6px 12px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-upload {
+            display: inline-block;
+            padding: 15px;
+            background: #dfa81c;
+            color: #000;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .status-text {
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            background: #22222b;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+
+    <div id="screen-load" class="screen active">
+        <h1>Cicerone Virtuale</h1>
+        <p style="text-align:center; color:#aaa; margin-bottom:30px;">Carica il database per iniziare il tour guidato.</p>
+        
+        <label class="custom-file-upload">
+            📁 Carica File CSV del Percorso
+            <input type="file" accept=".csv" onchange="caricaCSV(this)">
+        </label>
+    
+        <div id="db-status" class="status-text">Nessun database caricato.</div>
+
+        <div id="itinerary-selector-wrapper" style="display: none;">
+            <label style="color: #dfa81c; font-weight: bold; display: block; margin-bottom: 8px;">Seleziona Itinerario:</label>
+            <select id="select-itinerario"></select>
+            <button id="btn-avvia" class="btn" style="background-color: #27ae60; opacity: 0.5;" disabled>Inizia Percorso ➔</button>
+        </div>
+    </div>
+
+    <div id="screen-itinerary" class="screen">
+    <div class="header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <button class="btn-back" onclick="navigaA('screen-load')" style="margin-bottom: 0;">⬅️ Cambia CSV</button>
+            <button class="btn-back" onclick="tornaASelezioneItinerario()" style="margin-bottom: 0; color: #27ae60;">🔄 Cambia Itinerario</button>
+        </div>
+        <h2 style="margin-top: 15px;">Mappa dell'Itinerario</h2>
+        <p id="itinerary-subtitle-name" style="color:#dfa81c; font-weight:bold; margin-top:5px;"></p>
+    </div>
+    <div class="container">
+        <div id="itinerary-buttons-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; width: 100%;">
+            <div id="cronotabella-placeholder" style="flex: 1; display: flex; justify-content: flex-start;"></div>
+            <button id="btn-attiva-mappa-itinerario" class="btn" style="background-color: #2980b9; margin-bottom: 0; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: auto; white-space: nowrap;" onclick="attivaMappaDaItinerario()">🗺️ Mappa Percorso</button>
+        </div>
+
+        <div id="map-view-box" style="width: 100%; height: 300px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #2a2a35; background-color: #111; display: none; z-index: 1;"></div>
+
+        <div id="itinerary-img" class="image-container" style="display:none;"></div>
+        <div id="lista-tappe"></div>
+    </div>
+</div>
+
+<div id="screen-countries" class="screen">
+    <div class="header">
+        <button class="btn-back" onclick="generaSchermataTappe()">⬅️ Torna alle Tappe</button>
+        <h2 id="countries-title">Paesi</h2>
+    </div>
+    <div class="container">
+        <div id="tappa-img" class="image-container" style="display:none;"></div>
+        <div id="tappa-history" class="desc-box" style="display:none;"></div>
+        <div id="lista-paesi"></div>
+    </div>
+</div>
+
+    <div id="screen-monuments" class="screen">
+        <div class="header">
+            <button class="btn-back" onclick="tornaAiPaesi()">⬅️ Torna ai Paesi</button>
+            <h2 id="monuments-title">Monumenti</h2>
+        </div>
+        <div class="container">
+            <div id="paese-img" class="image-container" style="display:none;"></div>
+            <div id="paese-history" class="desc-box" style="display:none;"></div>
+            <div id="lista-monumenti"></div>
+        </div>
+    </div>
+
+    <div id="screen-artworks" class="screen">
+        <div class="header">
+            <button class="btn-back" onclick="tornaAiMonumentiDaOpere()">⬅️ Torna ai Monumenti</button>
+            <h2 id="artwork-title">Nome Monumento</h2>
+            <p id="artwork-subtitle" style="color: #aaa; font-style: italic; margin-top:5px;"></p>
+        </div>
+        <div class="container">
+            
+
+            <div id="monument-img" class="image-container" style="display:none;"></div>
+            <div id="monument-history" class="desc-box" style="display:none;"></div>
+
+            <div id="monument-audio-wrapper" class="card" style="background:#222; border-left:4px solid #dfa81c; display:none; flex-direction:column; align-items:stretch; cursor:default; padding: 16px;">
+                <button id="btn-monument-attiva-ai" class="btn" style="background-color: #dfa81c; color: #000; font-weight: bold; margin-bottom:0;" onclick="avviaAudioMonumento()">
+                    🤖 Attiva Cicerone Virtuale (Monumento)
+                </button>
+                <div id="monument-audio-controls" style="display:none; margin-top:10px;">
+                    <div id="monument-state-playing">
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn" style="flex:2; background-color:#27ae60; margin:0; cursor:default;">🔊 Sta parlando...</button>
+                            <button class="btn" style="flex:1; background-color:#c0392b; margin:0;" onclick="pausaAudioMonumento()">⏸️ Pausa</button>
+                        </div>
+                    </div>
+                    <div id="monument-state-paused" style="display:none;">
+                        <p style="color: #dfa81c; font-style: italic; font-size: 0.9em; text-align: center; margin-bottom: 10px;">Audio in pausa</p>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn" style="flex:1; background-color:#27ae60; margin:0;" onclick="riprendiAudioMonumento()">▶️ Riprendi</button>
+                            <button class="btn" style="flex:1; background-color:#7f8c8d; margin:0;" onclick="riavviaAudioMonumentoDaCapo()">🔄 Riascolta</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 id="section-opere-title" style="margin:25px 0 10px 0; color:#dfa81c; font-size:1.2rem;">Opere Contenute:</h3>
+            <div id="lista-opere"></div>
+        </div>
+    </div>
+
+    <div id="screen-details" class="screen">
+        <div class="header">
+            <button class="btn-back" onclick="indietroDallAudio()">⬅️ Torna al Monumento</button>
+            <h2 id="audio-title">Dettaglio Opera</h2>
+            <p id="audio-subtitle" style="color: #aaa; font-style: italic; margin-top:5px;"></p>
+        </div>
+        <div class="container">
+            <div id="audio-img" class="image-container" style="display:none;"></div>
+            <div id="audio-description-block" class="desc-box" style="display:none;"></div>
+
+            <button id="btn-attiva-ai" class="btn" style="background-color: #dfa81c; font-weight: bold; color:#000;" onclick="avviaCiceroneAI()">
+                🤖 Attiva Cicerone Virtuale (Opera)
+            </button>
+
+            <div id="audio-controls" style="display: none; margin-top: 20px;">
+                <div id="opera-state-ready" style="display: block;">
+                    <button class="btn" style="background-color: #1a5f7a; margin-bottom:0;" onclick="gestisciAudioOpera()">🔊 Ascolta</button>
+                </div>
+                <div id="opera-state-playing" style="display: none;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn" style="flex: 2; background-color: #27ae60; margin-bottom:0; cursor: default;">🔊 Sta parlando...</button>
+                        <button class="btn" style="flex: 1; background-color: #c0392b; margin-bottom:0;" onclick="pausaAudioOpera()">⏸️ Pausa</button>
+                    </div>
+                </div>
+                <div id="opera-state-paused" style="display: none;">
+                    <p style="color: #dfa81c; font-style: italic; font-size: 0.9em; text-align: center; margin-bottom: 10px;">Audio in pausa</p>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn" style="flex: 1; background-color: #27ae60; margin-bottom:0;" onclick="riprendiAudioOpera()">▶️ Riprendi</button>
+                        <button class="btn" style="flex: 1; background-color: #7f8c8d; margin-bottom:0;" onclick="riavviaAudioOperaDaCapo()">🔄 Riascolta da capo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="cronotabella-viewer" class="viewer-modal">
+    <div class="viewer-header-bar">
+        <span style="font-weight: bold; font-size: 0.95rem; color:#dfa81c;">📋 Cronotabella Tappa</span>
+        <button class="viewer-close" onclick="chiudiViewerCronotabella()">Chiudi ✕</button>
+    </div>
+    <div id="cronotabella-pages-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+</div>
+
+<script>
+    let database = []; 
+    let testoAudioAttuale = "";
+    let audioCtx = null;
+
+    let idTappaCorrente = null;
+    let idPaeseCorrente = null; 
+    let idMonumentoCorrente = null;
+    let itinerarioSelezionato = "";
+    
+    let testoAudioMonumentoAttuale = "";
+
+    let statoAudioOpera = "stop";
+    let statoAudioMonumento = "stop";
+
+    let arrayParoleOpera = [];
+    let indiceParolaCorrenteOpera = 0;
+
+    let arrayParoleMonumento = [];
+    let indiceParolaCorrenteMonumento = 0;
+
+    let bloccoResetInPausaOpera = false;
+    let bloccoResetInPausaMonumento = false;
+
+    let mappaLeafletIstanza = null;
+
+    const iconaMarkerOffline = L.divIcon({
+        html: '<div style="background-color: #e74c3c; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.6);"></div>',
+        className: 'marker-custom-offline',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+    });
+
+    function navigaA(screenId) {
+        interrompiSintesi();
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        
+        // Controlla che non ci troviamo NE' nella schermata opere NE' in quella itinerario
+        if(screenId !== 'screen-artworks' && screenId !== 'screen-itinerary') {
+            let mapBox = document.getElementById('map-view-box');
+            // Nasconde il box della mappa solo se l'elemento esiste effettivamente nella pagina
+            if (mapBox) {
+                mapBox.style.display = "none";
+            }
+            
+            if(mappaLeafletIstanza) {
+                mappaLeafletIstanza.remove();
+                mappaLeafletIstanza = null;
+            }
+        }
+        window.scrollTo(0, 0);
+    }
+
+    function interrompiSintesi() {
+        bloccoResetInPausaOpera = false;
+        bloccoResetInPausaMonumento = false;
+        statoAudioOpera = "stop";
+        statoAudioMonumento = "stop";
+        indiceParolaCorrenteOpera = 0;
+        indiceParolaCorrenteMonumento = 0;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        resetBottoniStatoNormale();
+        resetBottoniMonumentoNormale();
+    }
+
+    function tornaASelezioneItinerario() {
+        interrompiSintesi();
+        document.getElementById('itinerary-selector-wrapper').style.display = "block";
+        navigaA('screen-load');
+    }
+
+    function svegliaCasseConUltrasuono(callback) {
+        try {
+            if ('speechSynthesis' in window) {
+                let warmUp = new SpeechSynthesisUtterance("");
+                warmUp.lang = 'it-IT';
+                window.speechSynthesis.speak(warmUp);
+            }
+
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(21000, audioCtx.currentTime); 
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);     
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            setTimeout(() => {
+                try { osc.stop(); } catch(e){}
+                if(callback) callback();
+            }, 400);
+        } catch(e) {
+            if(callback) callback();
+        }
+    }
+
+    function pulisciNomeImmagine(nomeImg) {
+        if (!nomeImg) return "";
+        let pulito = nomeImg.trim().replace(/["']/g, '');
+        return pulito.replace(/\\/g, '/');
+    }
+
+    function gestisciVisualizzazioneMedia(item, imgElementId, historyElementId, fallbackTitle = "Descrizione:") {
+        const imgBox = document.getElementById(imgElementId);
+        const histBox = document.getElementById(historyElementId);
+        if (!imgBox) return;
+
+        const percorsoFoto = item ? pulisciNomeImmagine(item.immagine) : "";
+        
+        if (percorsoFoto !== "") {
+            imgBox.style.display = "flex";
+            imgBox.innerHTML = `
+                <img src="${percorsoFoto}" alt="${item.titolo || ''}" 
+                     onerror="this.style.display='none'; document.getElementById('${imgElementId}-err').innerHTML='<div class=\\'error-photo-debug\\\'>⚠️ Foto non trovata!<br>L\\'app sta cercando il file:<br><strong>${percorsoFoto}</strong><br>Verifica che il nome corrisponda esattamente.</div>'; document.getElementById('${imgElementId}-err').style.display='block';">
+                <div id="${imgElementId}-err" style="display:none; width:100%;"></div>
+            `;
+        } else {
+            imgBox.style.display = "none";
+            imgBox.innerHTML = "";
+        }
+
+        if (histBox) {
+            if (item && item.testoStoria && item.testoStoria.trim() !== "") {
+                histBox.innerHTML = `<strong>${fallbackTitle}</strong><br>${item.testoStoria}`;
+                histBox.style.display = "block";
+            } else {
+                histBox.style.display = "none";
+                histBox.innerHTML = "";
+            }
+        }
+    }
+
+    function haSottolivelli(idPadre) {
+        if (!idPadre) return false;
+        return database.some(item => item.genitore === idPadre);
+    }
+
+    function apriViewerCronotabella(stringaDocumenti) {
+        const modal = document.getElementById('cronotabella-viewer');
+        const container = document.getElementById('cronotabella-pages-container');
+        container.innerHTML = "";
+
+        const pagine = stringaDocumenti.split(',');
+        pagine.forEach(pag => {
+            const percorsoCad = pulisciNomeImmagine(pag);
+            if(percorsoCad !== "") {
+                const img = document.createElement('img');
+                img.src = percorsoCad;
+                img.alt = "Pagina Cronotabella";
+                img.onerror = function() { this.style.display = 'none'; };
+                container.appendChild(img);
+            }
+        });
+
+        modal.style.display = "block";
+        modal.scrollTo(0, 0);
+    }
+
+    function chiudiViewerCronotabella() {
+        document.getElementById('cronotabella-viewer').style.display = "none";
+    }
+
+    function caricaCSV(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const testo = e.target.result;
+            database = [];
+            let setItinerari = new Set();
+            
+            let primaRiga = testo.split(/\r?\n/)[0] || "";
+            let separatore = ";";
+            const cPuntoVirgola = (primaRiga.match(/;/g) || []).length;
+            const cVirgola = (primaRiga.match(/,/g) || []).length;
+            if (cVirgola > cPuntoVirgola) separatore = ",";
+
+            let righe = [];
+            let rigaCorrente = "";
+            let inQuotes = false;
+            for (let i = 0; i < testo.length; i++) {
+                let char = testo[i];
+                if (char === '"') {
+                    if (inQuotes && testo[i+1] === '"') { rigaCorrente += '"'; i++; }
+                    else inQuotes = !inQuotes;
+                } else if ((char === '\n' || char === '\r') && !inQuotes) {
+                    if (rigaCorrente.trim()) righe.push(rigaCorrente);
+                    rigaCorrente = "";
+                } else {
+                    if (char === '\n' || char === '\r') rigaCorrente += " ";
+                    else rigaCorrente += char;
+                }
+            }
+            if (rigaCorrente.trim()) righe.push(rigaCorrente);
+
+            for (let i = 1; i < righe.length; i++) {
+                let tutteLeColonne = parseCSVLine(righe[i], separatore);
+                
+                if (tutteLeColonne.length >= 6) {
+                    let itinerario = tutteLeColonne[0] || "";
+                    let id          = tutteLeColonne[1] || "";
+                    let livello     = tutteLeColonne[2] || "";
+                    let genitore    = tutteLeColonne[3] || "";
+                    let titolo      = tutteLeColonne[4] || "";
+                    let sottotitolo = tutteLeColonne[5] || "";
+                    let mappaCartella = tutteLeColonne.length >= 13 ? tutteLeColonne[tutteLeColonne.length - 1] : "";
+                    let longitudine   = tutteLeColonne.length >= 12 ? tutteLeColonne[tutteLeColonne.length - 2] : "";
+                    let latitudine    = tutteLeColonne.length >= 11 ? tutteLeColonne[tutteLeColonne.length - 3] : "";
+                    let tipoCard      = tutteLeColonne.length >= 10 ? tutteLeColonne[tutteLeColonne.length - 4] : "";
+                    let immagine      = tutteLeColonne.length >= 9 ? tutteLeColonne[tutteLeColonne.length - 5] : "";
+                    let limiteSuperiore = tutteLeColonne.length;
+                    if (tutteLeColonne.length >= 13) limiteSuperiore = tutteLeColonne.length - 5;
+                    else if (tutteLeColonne.length >= 10) limiteSuperiore = tutteLeColonne.length - 1;
+                    
+                    let colonneCentrali = tutteLeColonne.slice(6, limiteSuperiore);
+                    let testoStoria = "";
+                    let testoAudio = "";
+                    
+                    if (colonneCentrali.length > 0) {
+                        let meta = Math.ceil(colonneCentrali.length / 2);
+                        testoStoria = colonneCentrali.slice(0, meta).join(separatore);
+                        testoAudio = colonneCentrali.slice(meta).join(separatore);
+                        if(!testoAudio && colonneCentrali.length === 1) {
+                            testoStoria = colonneCentrali[0];
+                            testoAudio = colonneCentrali[0];
+                        }
+                    }
+
+                    const item = {
+                        itinerario: itinerario.trim(),
+                        id: id.trim(),
+                        livello: livello.trim(),
+                        genitore: genitore.trim(),
+                        titolo: titolo.trim(),
+                        sottotitolo: sottotitolo.trim(),
+                        testoStoria: testoStoria.trim(),
+                        testoAudio: testoAudio.trim(),
+                        immagine: immagine.trim(),
+                        tipoCard: tipoCard.trim(),
+                        latitudine: latitudine.trim(),
+                        longitudine: longitudine.trim(),
+                        mappaCartella: mappaCartella.trim()
+                    };
+
+                    if (item.id || item.itinerario) {
+                        database.push(item);
+                        if(item.itinerario) setItinerari.add(item.itinerario);
+                    }
+                }
+            }
+
+            if (database.length > 0) {
+                document.getElementById('db-status').innerText = `Caricate ${database.length} righe!`;
+                document.getElementById('db-status').style.color = "#27ae60";
+
+                const select = document.getElementById('select-itinerario');
+                select.innerHTML = "";
+
+                if (setItinerari.size === 0) {
+                    setItinerari.add("Default");
+                    database.forEach(el => { if(!el.itinerario) el.itinerario = "Default"; });
+                }
+
+                setItinerari.forEach(it => {
+                    if(it) {
+                        const opt = document.createElement('option');
+                        opt.value = it;
+                        opt.innerText = it;
+                        select.appendChild(opt);
+                    }
+                });
+
+                document.getElementById('itinerary-selector-wrapper').style.display = "block";
+                const btn = document.getElementById('btn-avvia');
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.onclick = function() {
+                    itinerarioSelezionato = select.value;
+                    generaSchermataTappe();
+                };
+            } else {
+                document.getElementById('db-status').innerText = "Errore: Nessun dato valido nel CSV.";
+                document.getElementById('db-status').style.color = "#e74c3c";
+            }
+        };
+        reader.readAsText(file, "UTF-8");
+    }
+
+    function parseCSVLine(text, separator) {
+        let arr = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            if (char === '"') {
+                if (inQuotes && text[i+1] === '"') { current += '"'; i++; }
+                else { inQuotes = !inQuotes; }
+            } else if (char === separator && !inQuotes) {
+                arr.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        arr.push(current.trim());
+        return arr;
+    }
+
+function generaSchermataTappe() {
+    document.getElementById('itinerary-subtitle-name').innerText = itinerarioSelezionato;
+    const infoItinerario = database.find(item => item.itinerario === itinerarioSelezionato);
+    gestisciVisualizzazioneMedia(infoItinerario, 'itinerary-img', null);
+    
+    // Svuota e resetta il contenitore a sinistra della mappa
+    const cronoPlaceholder = document.getElementById('cronotabella-placeholder');
+    if (cronoPlaceholder) {
+        cronoPlaceholder.innerHTML = "";
+    }
+
+    const contenitore = document.getElementById('lista-tappe');
+    contenitore.innerHTML = "";
+
+    const tappe = database.filter(item => item.livello === "Percorso" && item.itinerario === itinerarioSelezionato);
+    if(tappe.length === 0) {
+        contenitore.innerHTML = "<p style='color:#aaa; font-style:italic;'>Nessuna tappa trovata.</p>";
+    }
+    
+    tappe.forEach((tappa) => {
+        const divCardCompleta = document.createElement('div');
+        divCardCompleta.style.marginBottom = "14px";
+        
+        const divCardDati = document.createElement('div');
+        divCardDati.className = "card";
+        divCardDati.style.marginBottom = "0";
+        
+        const indicatoreLucina = haSottolivelli(tappa.id) ? `<div class="sublevel-indicator">VEDI</div>` : '';
+        divCardDati.innerHTML = `
+            <div class="card-content">
+                <div class="card-title">${tappa.titolo}</div>
+                <div class="card-sub">${tappa.sottotitolo}</div>
+            </div>
+            ${indicatoreLucina}
+        `;
+        
+        divCardDati.onclick = function() {
+            generaSchermataPaesi(tappa.id, tappa.titolo);
+        };
+        divCardCompleta.appendChild(divCardDati);
+
+        const pathDocumento = tappa.testoAudio ? tappa.testoAudio.trim() : "";
+        if (pathDocumento !== "") {
+            const pathLower = pathDocumento.toLowerCase();
+            if (pathLower.endsWith('.pdf') || pathLower.endsWith('.jpg') || pathLower.endsWith('.jpeg') || pathLower.endsWith('.png')) {
+                // Crea il pulsante Cronotabella perfettamente allineato e dimensionato
+                const btnDoc = document.createElement('button');
+                btnDoc.className = "btn-inline-crono";
+                btnDoc.style.marginTop = "0"; 
+                btnDoc.style.padding = "6px 12px";
+                btnDoc.style.fontSize = "0.8rem";
+                btnDoc.style.borderRadius = "6px";
+                btnDoc.style.whiteSpace = "nowrap";
+                btnDoc.innerHTML = "📋 Cronotabella";
+                btnDoc.onclick = function(e) {
+                    e.stopPropagation();
+                    apriViewerCronotabella(pathDocumento);
+                };
+                
+                // Lo sposta in alto, affiancandolo a sinistra del pulsante mappa
+                if (cronoPlaceholder) {
+                    cronoPlaceholder.appendChild(btnDoc);
+                }
+            }
+        }
+        
+        contenitore.appendChild(divCardCompleta);
+    });
+
+    navigaA('screen-itinerary');
+}
+
+    function generaSchermataPaesi(idGenitore, titoloTappa) {
+        idTappaCorrente = idGenitore;
+        if(titoloTappa) {
+            document.getElementById('countries-title').innerText = `Paesi di ${titoloTappa}`;
+        }
+        const infoTappa = database.find(item => item.id === idGenitore && item.livello === "Percorso");
+        gestisciVisualizzazioneMedia(infoTappa, 'tappa-img', 'tappa-history', 'Info Tappa:');
+
+        const contenitore = document.getElementById('lista-paesi');
+        contenitore.innerHTML = "";
+
+        const paesi = database.filter(item => item.livello === "Paese" && item.genitore === idGenitore);
+        if(paesi.length === 0) {
+            contenitore.innerHTML = "<p style='color:#aaa; font-style:italic;'>Nessun paese trovato.</p>";
+        }
+
+        paesi.forEach(p => {
+            const div = document.createElement('div');
+            div.className = "card";
+            const indicatoreLucina = haSottolivelli(p.id) ? `<div class="sublevel-indicator">APRI</div>` : '';
+            div.innerHTML = `
+                <div class="card-content">
+                    <div class="card-title">${p.titolo}</div>
+                    <div class="card-sub">${p.sottotitolo}</div>
+                </div>
+                ${indicatoreLucina}
+            `;
+            div.onclick = function() { generaSchermataMonumenti(p.id, p.titolo); };
+            contenitore.appendChild(div);
+        });
+        navigaA('screen-countries');
+    }
+
+    function generaSchermataMonumenti(idGenitore, titoloPaese) {
+        idPaeseCorrente = idGenitore;
+        if(titoloPaese) {
+            document.getElementById('monuments-title').innerText = `Monumenti di ${titoloPaese}`;
+        }
+        const infoPaese = database.find(item => item.id === idGenitore && item.livello === "Paese");
+        gestisciVisualizzazioneMedia(infoPaese, 'paese-img', 'paese-history', 'Cenni Storici Paese:');
+
+        const contenitore = document.getElementById('lista-monumenti');
+        contenitore.innerHTML = "";
+
+        const monumenti = database.filter(item => item.genitore === idGenitore && item.livello === "Monumento");
+        if(monumenti.length === 0) {
+            contenitore.innerHTML = "<p style='color:#aaa; font-style:italic;'>Nessun monumento trovato.</p>";
+        }
+
+        monumenti.forEach(m => {
+            const div = document.createElement('div');
+            div.className = "card";
+            const indicatoreLucina = haSottolivelli(m.id) ? `<div class="sublevel-indicator">APRI</div>` : '';
+            div.innerHTML = `
+                <div class="card-content">
+                    <div class="card-title">${m.titolo}</div>
+                    <div class="card-sub">${m.sottotitolo}</div>
+                </div>
+                ${indicatoreLucina}
+            `;
+            div.onclick = function() { mostraDettaglioMonumento(m); };
+            contenitore.appendChild(div);
+        });
+        navigaA('screen-monuments');
+    }
+
+    function tornaAiPaesi() {
+        const tappaPrecedente = database.find(item => item.id === idTappaCorrente);
+        generaSchermataPaesi(idTappaCorrente, tappaPrecedente ? tappaPrecedente.titolo : "");
+    }
+
+    function mostraDettaglioMonumento(m) {
+        idMonumentoCorrente = m.id;
+        document.getElementById('artwork-title').innerText = m.titolo;
+        document.getElementById('artwork-subtitle').innerText = m.sottotitolo;
+
+        const infoMonumento = database.find(item => item.id === m.id && item.livello === "Monumento");
+        gestisciVisualizzazioneMedia(infoMonumento, 'monument-img', 'monument-history', 'Storia e Architettura:');
+
+        const contenitoreDati = document.getElementById('monument-history');
+        const vecchioWrapper = document.getElementById('map-buttons-container');
+        if(vecchioWrapper) vecchioWrapper.remove();
+
+      // I pulsanti Mappa Extraurbano e Mappa Cittadino sono stati rimossi definitivamente
+
+        testoAudioMonumentoAttuale = m.testoStoria ? m.testoStoria.trim() : "";
+        arrayParoleMonumento = testoAudioMonumentoAttuale ? testoAudioMonumentoAttuale.split(/\s+/) : [];
+        indiceParolaCorrenteMonumento = 0;
+
+        if (testoAudioMonumentoAttuale !== "") {
+            document.getElementById('monument-audio-wrapper').style.display = 'flex';
+        } else {
+            document.getElementById('monument-audio-wrapper').style.display = 'none';
+        }
+
+        const contenitoreOpere = document.getElementById('lista-opere');
+        contenitoreOpere.innerHTML = "";
+
+        const opere = database.filter(item => item.genitore === m.id && item.livello === "Opera");
+        if (opere.length === 0) {
+            document.getElementById('section-opere-title').style.display = 'none';
+        } else {
+            document.getElementById('section-opere-title').style.display = 'block';
+            opere.forEach(o => {
+                const div = document.createElement('div');
+                div.className = "card";
+                div.innerHTML = `
+                    <div class="card-content">
+                        <div class="card-title">${o.titolo}</div>
+                        <div class="card-sub">${o.sottotitolo}</div>
+                    </div>
+                    <div class="sublevel-indicator" style="background-color:#27ae60; color:#fff;">INFO</div>
+                `;
+                div.onclick = function() { mostraSchermataAudio(o); };
+                contenitoreOpere.appendChild(div);
+            });
+        }
+
+        navigaA('screen-artworks');
+    }
+
+    /* =========================================================================
+       MODIFICHE STRUTTURALI DIAGNOSTICATE TRAMITE TEST (ESTENSIONE .PNG)
+       ========================================================================= */
+function attivaMappaDaItinerario() {
+    const mapBox = document.getElementById('map-view-box');
+    if (!mapBox) return;
+    
+    if (mapBox.style.display === "block") {
+        mapBox.style.display = "none";
+        if(mappaLeafletIstanza) {
+            mappaLeafletIstanza.remove();
+            mappaLeafletIstanza = null;
+        }
+        return;
+    }
+
+    const tappeConCoordinate = database.filter(item => 
+        item.itinerario === itinerarioSelezionato 
+        && (item.livello === "Monumento" || item.livello === "Paese")
+        && item.latitudine && item.latitudine.trim() !== "" 
+        && item.longitudine && item.longitudine.trim() !== "" 
+    );
+
+    if (tappeConCoordinate.length === 0) {
+        alert("Nessuna coordinata geografica disponibile per questo itinerario.");
+        return;
+    }
+
+    mapBox.style.display = "block";
+
+    if (mappaLeafletIstanza) {
+        mappaLeafletIstanza.remove();
+        mappaLeafletIstanza = null;
+    }
+
+    const rigaConMappa = tappeConCoordinate.find(t => t.mappaCartella && t.mappaCartella.trim() !== "");
+    let percorsoMappa = rigaConMappa ? rigaConMappa.mappaCartella.trim() : 'mappe-offline/Rieti';
+
+    // 1. Calcoliamo i limiti geografici (nord, sud, est, ovest) di tutti i punti
+    const limitiMappa = L.latLngBounds();
+    tappeConCoordinate.forEach(t => {
+        const lat = parseFloat(t.latitudine.replace(',', '.'));
+        const lng = parseFloat(t.longitudine.replace(',', '.'));
+        if (!isNaN(lat) && !isNaN(lng)) {
+            limitiMappa.extend([lat, lng]);
+        }
+    });
+
+    // 2. LOGICA INTELLIGENTE NO-LIMITS (Nessuna blindatura sui nomi!)
+    // Calcoliamo la distanza approssimativa tra il punto più a nord e quello più a sud
+    const nordSudDist = limitiMappa.getNorth() - limitiMappa.getSouth();
+    
+    let zoomIniziale = 14;
+    let minZoomConsentito = 13;
+    let maxZoomConsentito = 15;
+
+    // Se tutti i marker sono vicinissimi tra loro (es. meno di 1 km, tipico di un centro storico cittadino come Rieti)
+    if (nordSudDist < 0.015) {
+        zoomIniziale = 17;
+        minZoomConsentito = 16;
+        maxZoomConsentito = 18;
+    } else {
+        // Se i marker sono molto distanti tra loro (itinerario extraurbano come la Conca)
+        zoomIniziale = 13; // Vista d'insieme più ampia!
+        minZoomConsentito = 12;
+        maxZoomConsentito = 15;
+    }
+
+    // 3. Inizializziamo la mappa con i limiti dinamici appena calcolati
+    mappaLeafletIstanza = L.map('map-view-box', {
+        minZoom: minZoomConsentito,
+        maxZoom: maxZoomConsentito
+    }).setView(limitiMappa.getCenter(), zoomIniziale); // Centra automaticamente sul cuore dell'itinerario
+
+    // 4. Carichiamo i tasselli offline dalla cartella definita nel CSV
+    L.tileLayer(`${percorsoMappa}/{z}/{x}/{y}.png`, {
+        minZoom: minZoomConsentito,
+        maxZoom: maxZoomConsentito,
+        attribution: 'Mappa Offline Cicerone',
+        errorTileUrl: 'Leaflet/images/no-tile.png'
+    }).addTo(mappaLeafletIstanza);
+
+    // 5. Disegniamo i marker
+    tappeConCoordinate.forEach(t => {
+        const lat = parseFloat(t.latitudine.replace(',', '.'));
+        const lng = parseFloat(t.longitudine.replace(',', '.'));
+        if (!isNaN(lat) && !isNaN(lng)) {
+            L.marker([lat, lng], { icon: iconaMarkerOffline })
+                .addTo(mappaLeafletIstanza)
+                .bindPopup(`<b>${t.titolo}</b><br>${t.sottotitolo || ''}`);
+        }
+    });
+
+    setTimeout(() => {
+        mappaLeafletIstanza.invalidateSize();
+    }, 150);
+}
+
+    function inizializzaMappaCoordinate(lat, lng, titoloMonumento, nomeCartella) {
+        const mapBox = document.getElementById('map-view-box');
+        mapBox.style.display = "block";
+        
+        if(mappaLeafletIstanza) {
+            mappaLeafletIstanza.remove();
+        }
+        
+        // MODIFICA TEST: SetView centrata sul livello di zoom 17 validato dal tester
+        mappaLeafletIstanza = L.map('map-view-box').setView([lat, lng], 17);
+
+        let percorsoMappa = (nomeCartella && nomeCartella.trim() !== "") ? nomeCartella.trim() : 'mappe-offline/Rieti';
+
+        // MODIFICA TEST: Estensione forzata su .png in conformità con i file fisici estratti
+        L.tileLayer(`${percorsoMappa}/{z}/{x}/{y}.png`, { 
+            maxZoom: 19, 
+            attribution: 'Mappa Monumento' 
+        }).addTo(mappaLeafletIstanza);
+
+        L.marker([lat, lng], { icon: iconaMarkerOffline }).addTo(mappaLeafletIstanza)
+         .bindPopup(`<b>${titoloMonumento}</b>`)
+         .openPopup();
+         
+        mappaLeafletIstanza.invalidateSize();
+    }
+
+    function tornaAiMonumentiDaOpere() {
+        const paesePrecedente = database.find(item => item.id === idPaeseCorrente);
+        generaSchermataMonumenti(idPaeseCorrente, paesePrecedente ? paesePrecedente.titolo : "");
+    }
+
+    function mostraSchermataAudio(o) {
+        document.getElementById('audio-title').innerText = o.titolo;
+        document.getElementById('audio-subtitle').innerText = o.sottotitolo;
+
+        const isInfoContatto = (o.tipoCard === "Info / Contatto" || o.livello === "Info / Contatto");
+        if (isInfoContatto) {
+            gestisciVisualizzazioneMedia(o, 'audio-img', null);
+        } else {
+            gestisciVisualizzazioneMedia(o, 'audio-img', 'audio-description-block', "Descrizione dell'opera:");
+        }
+
+        let testoSelezionato = (o.testoAudio && o.testoAudio.trim() !== "") ? o.testoAudio.trim() : "";
+        if (!testoSelezionato && o.testoStoria && o.testoStoria.trim() !== "") {
+            testoSelezionato = o.testoStoria.trim();
+        }
+
+        testoAudioAttuale = testoSelezionato;
+        arrayParoleOpera = testoAudioAttuale ? testoAudioAttuale.split(/\s+/) : [];
+        indiceParolaCorrenteOpera = 0;
+
+        const btnAttiva = document.getElementById('btn-attiva-ai');
+        if (testoAudioAttuale !== "") {
+            if (isInfoContatto) {
+                btnAttiva.style.display = 'none';
+                const mainDescBox = document.getElementById('audio-description-block');
+                if (mainDescBox) {
+                    mainDescBox.innerHTML = `<strong>Informazioni e Dettagli:</strong><br>${testoAudioAttuale}`;
+                    mainDescBox.style.display = 'block';
+                }
+            } else {
+                btnAttiva.style.display = 'block';
+                document.getElementById('audio-description-block').style.display = 'block';
+            }
+        } else {
+            btnAttiva.style.display = 'none';
+            document.getElementById('audio-description-block').style.display = 'none';
+        }
+
+        document.getElementById('audio-controls').style.display = 'none';
+        document.getElementById('opera-state-ready').style.display = 'block';
+        document.getElementById('opera-state-playing').style.display = 'none';
+        document.getElementById('opera-state-paused').style.display = 'none';
+
+        navigaA('screen-details');
+    }
+
+    function indietroDallAudio() {
+        interrompiSintesi();
+        const monPrecedente = database.find(item => item.id === idMonumentoCorrente);
+        if(monPrecedente) {
+            mostraDettaglioMonumento(monPrecedente);
+        } else {
+            navigaA('screen-monuments');
+        }
+    }
+
+    function avviaAudioMonumento() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        svegliaCasseConUltrasuono(() => {
+            document.getElementById('btn-monument-attiva-ai').style.display = 'none';
+            document.getElementById('monument-audio-controls').style.display = 'block';
+            gestisciAudioMonumento();
+        });
+    }
+
+    function resetBottoniMonumentoNormale() {
+        document.getElementById('btn-monument-attiva-ai').style.display = 'block';
+        document.getElementById('monument-audio-controls').style.display = 'none';
+        document.getElementById('monument-state-playing').style.display = 'block';
+        document.getElementById('monument-state-paused').style.display = 'none';
+    }
+
+    function gestisciAudioMonumento() {
+        if (!('speechSynthesis' in window) || arrayParoleMonumento.length === 0) return;
+        statoAudioMonumento = "playing";
+        bloccoResetInPausaMonumento = false;
+
+        document.getElementById('monument-state-playing').style.display = 'block';
+        document.getElementById('monument-state-paused').style.display = 'none';
+        window.speechSynthesis.cancel();
+
+        let indiceDiPartenza = 0;
+        if (indiceParolaCorrenteMonumento > 0) {
+            indiceDiPartenza = Math.max(0, indiceParolaCorrenteMonumento - 3);
+        }
+        const offsetIniziale = indiceDiPartenza;
+
+        const stringaDaLeggere = arrayParoleMonumento.slice(indiceDiPartenza).join(" ");
+        const unita = new SpeechSynthesisUtterance(stringaDaLeggere);
+        unita.lang = 'it-IT';
+        unita.rate = 0.95;
+
+        const voci = window.speechSynthesis.getVoices();
+        const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
+        if (voceMigliore) unita.voice = voceMigliore;
+
+        let paroleLetteInQuestaSessione = 0;
+        unita.onboundary = function(event) {
+            if (event.name === 'word') {
+                indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteInQuestaSessione;
+                paroleLetteInQuestaSessione++;
+            }
+        };
+
+        unita.onend = function() {
+            if (bloccoResetInPausaMonumento) return;
+            statoAudioMonumento = "stop";
+            indiceParolaCorrenteMonumento = 0;
+            resetBottoniMonumentoNormale();
+        };
+
+        unita.onerror = function() {
+            if (bloccoResetInPausaMonumento) return;
+            statoAudioMonumento = "stop";
+            indiceParolaCorrenteMonumento = 0;
+            resetBottoniMonumentoNormale();
+        };
+
+        window.speechSynthesis.speak(unita);
+    }
+
+    function pausaAudioMonumento() {
+        if ('speechSynthesis' in window) {
+            bloccoResetInPausaMonumento = true;
+            statoAudioMonumento = "paused";
+            window.speechSynthesis.cancel();
+            document.getElementById('monument-state-playing').style.display = 'none';
+            document.getElementById('monument-state-paused').style.display = 'block';
+        }
+    }
+
+    function riprendiAudioMonumento() {
+        gestisciAudioMonumento();
+    }
+
+    function riavviaAudioMonumentoDaCapo() {
+        indiceParolaCorrenteMonumento = 0;
+        gestisciAudioMonumento();
+    }
+
+    function avviaCiceroneAI() {
+        document.getElementById('btn-attiva-ai').style.display = 'none';
+        document.getElementById('audio-controls').style.display = 'block';
+    }
+
+    function resetBottoniStatoNormale() {
+        document.getElementById('btn-attiva-ai').style.display = 'block';
+        document.getElementById('audio-controls').style.display = 'none';
+        document.getElementById('opera-state-ready').style.display = 'block';
+        document.getElementById('opera-state-playing').style.display = 'none';
+        document.getElementById('opera-state-paused').style.display = 'none';
+    }
+
+    function gestisciAudioOpera() {
+        if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
+        statoAudioOpera = "playing";
+        bloccoResetInPausaOpera = false;
+
+        document.getElementById('opera-state-ready').style.display = 'none';
+        document.getElementById('opera-state-playing').style.display = 'block';
+        document.getElementById('opera-state-paused').style.display = 'none';
+        window.speechSynthesis.cancel();
+
+        let indiceDiPartenza = 0;
+        if (indiceParolaCorrenteOpera > 0) {
+            indiceDiPartenza = Math.max(0, indiceParolaCorrenteOpera - 3);
+        }
+        const offsetIniziale = indiceDiPartenza;
+
+        const stringaDaLeggere = arrayParoleOpera.slice(indiceDiPartenza).join(" ");
+        const unita = new SpeechSynthesisUtterance(stringaDaLeggere);
+        unita.lang = 'it-IT';
+        unita.rate = 0.95;
+
+        const voci = window.speechSynthesis.getVoices();
+        const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
+        if (voceMigliore) unita.voice = voceMigliore;
+
+        let paroleLetteInQuestaSessione = 0;
+        unita.onboundary = function(event) {
+            if (event.name === 'word') {
+                indiceParolaCorrenteOpera = offsetIniziale + paroleLetteInQuestaSessione;
+                paroleLetteInQuestaSessione++;
+            }
+        };
+
+        unita.onend = function() {
+            if (bloccoResetInPausaOpera) return;
+            statoAudioOpera = "stop";
+            indiceParolaCorrenteOpera = 0;
+            resetBottoniStatoNormale();
+        };
+
+        unita.onerror = function() {
+            if (bloccoResetInPausaOpera) return;
+            statoAudioOpera = "stop";
+            indiceParolaCorrenteOpera = 0;
+            resetBottoniStatoNormale();
+        };
+
+        svegliaCasseConUltrasuono(() => {
+            window.speechSynthesis.speak(unita);
+        });
+    }
+
+    function pausaAudioOpera() {
+        if ('speechSynthesis' in window) {
+            bloccoResetInPausaOpera = true;
+            statoAudioOpera = "paused";
+            window.speechSynthesis.cancel();
+            
+            document.getElementById('opera-state-ready').style.display = 'none';
+            document.getElementById('opera-state-playing').style.display = 'none';
+            document.getElementById('opera-state-paused').style.display = 'block';
+        }
+    }
+
+    function riprendiAudioOpera() {
+        gestisciAudioOpera();
+    }
+
+    function riavviaAudioOperaDaCapo() {
+        indiceParolaCorrenteOpera = 0;
+        gestisciAudioOpera();
+    }
+// Registrazione del Service Worker per la PWA offline
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then((reg) => {
+                console.log('Service Worker registrato con successo! Ambito:', reg.scope);
+            })
+            .catch((err) => {
+                console.error('Errore nella registrazione del Service Worker:', err);
+            });
+    });
+}
+</script>
+
+</body>
+</html>
