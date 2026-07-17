@@ -1384,32 +1384,37 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-// --- CARICAMENTO AUTOMATICO DAL NAS WD MY CLOUD ---
+// --- CARICAMENTO AUTOMATICO DA GOOGLE DRIVE ---
 window.addEventListener('DOMContentLoaded', () => {
-    // ⚠️ SOSTITUISCI IL LINK QUI SOTTO CON IL TUO LINK REALE DEL WD MY CLOUD
-    const urlDatabaseNAS = https://os5.mycloud.com/action/share/7760fdaf-4482-4192-9587-fe9c945e5dba;
+    // 💡 INSERISCI IL TUO ID UNIVOCO ALLA FINE DI QUESTO LINK
+    const idFileDrive = "1wEwdxWRDtfQEzwu7_mwTii-oKRDJDR2B"; 
+    const urlDatabaseCloud = `https://docs.google.com/spreadsheets/d/${idFileDrive}/export?format=csv`;
 
-    console.log("Tentativo di caricamento automatico del database dal NAS...");
+    console.log("Tentativo di caricamento automatico da Google Drive...");
 
-    fetch(urlDatabaseNAS)
+    fetch(urlDatabaseCloud)
         .then(response => {
             if (!response.ok) {
-                throw new Error("Risposta del server non valida (Stato: " + response.status + ")");
+                throw new Error("Risposta da Google Drive non valida (Stato: " + response.status + ")");
             }
             return response.text();
         })
         .then(datiCSV => {
-            console.log("Database scaricato con successo dal WD My Cloud!");
+            if (datiCSV.trim().startsWith("<!DOCTYPE") || datiCSV.trim().startsWith("{")) {
+                throw new Error("Il file ricevuto non è un CSV valido. Controlla i permessi di condivisione.");
+            }
+
+            console.log("Database scaricato con successo da Google Drive!");
             
-            // 🛠️ ATTENZIONE: Sostituisci 'processaFileCSV' con il nome REALE 
-            // della tua funzione che legge il testo del CSV e disegna i marker.
-            caricaCSV(input) 
+            // Richiama la tua funzione per disegnare i marker sulla mappa
+            caricaCSV(input); 
         })
         .catch(errore => {
-            console.warn("Caricamento automatico dal NAS fallito: ", errore);
+            console.warn("Caricamento automatico fallito: ", errore);
             console.log("Usa il pulsante carica file manuale se necessario.");
         });
 });
+// ----------------------------------------------
 // --------------------------------------------------
 </script>
 
