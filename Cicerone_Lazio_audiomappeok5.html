@@ -1384,6 +1384,33 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+// --- CARICAMENTO AUTOMATICO DAL NAS WD MY CLOUD ---
+window.addEventListener('DOMContentLoaded', () => {
+    // ⚠️ SOSTITUISCI IL LINK QUI SOTTO CON IL TUO LINK REALE DEL WD MY CLOUD
+    const urlDatabaseNAS = https://os5.mycloud.com/action/share/7760fdaf-4482-4192-9587-fe9c945e5dba;
+
+    console.log("Tentativo di caricamento automatico del database dal NAS...");
+
+    fetch(urlDatabaseNAS)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Risposta del server non valida (Stato: " + response.status + ")");
+            }
+            return response.text();
+        })
+        .then(datiCSV => {
+            console.log("Database scaricato con successo dal WD My Cloud!");
+            
+            // 🛠️ ATTENZIONE: Sostituisci 'processaFileCSV' con il nome REALE 
+            // della tua funzione che legge il testo del CSV e disegna i marker.
+            caricaCSV(input) 
+        })
+        .catch(errore => {
+            console.warn("Caricamento automatico dal NAS fallito: ", errore);
+            console.log("Usa il pulsante carica file manuale se necessario.");
+        });
+});
+// --------------------------------------------------
 </script>
 
 </body>

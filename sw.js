@@ -35,6 +35,11 @@ self.addEventListener('activate', (event) => {
 });
 
 // 3. Gestione intelligente delle richieste (Mappe, Foto e File)
+self.addEventListener('fetch', event => {
+    // Se la richiesta va verso il NAS (mycloud.com) o siti esterni, lasciala passare direttamente su internet
+    if (!event.request.url.startsWith(self.location.origin)) {
+        return; 
+    }
 self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith('http')) return;
 
