@@ -35,14 +35,15 @@ self.addEventListener('activate', (event) => {
 });
 
 // 3. Gestione intelligente delle richieste (Mappe, Foto e File)
-self.addEventListener('fetch', event => {
-    // Se la richiesta va verso il NAS (mycloud.com) o siti esterni, lasciala passare direttamente su internet
-    if (!event.request.url.startsWith(self.location.origin)) {
-        return; 
-    }
 self.addEventListener('fetch', (event) => {
+  // Sicurezza: Ignora richieste non HTTP (es. estensioni del browser)
   if (!event.request.url.startsWith('http')) return;
-}
+
+  // Se la richiesta va verso siti esterni (es. Google Drive), lasciala passare direttamente su internet
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return; 
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       // Se il file (mappa o foto) è già in cache, lo restituisce subito
@@ -64,7 +65,6 @@ self.addEventListener('fetch', (event) => {
         console.warn('Risorsa non trovata o offline:', event.request.url);
         
         // CORREZIONE CRASH: Se siamo offline o il file non esiste, restituisce un errore HTTP pulito
-        // Evita il crash "Failed to convert value to 'Response'"
         return new Response('Risorsa non disponibile offline', {
           status: 404,
           statusText: 'Not Found',
