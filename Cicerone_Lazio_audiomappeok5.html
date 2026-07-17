@@ -1384,45 +1384,37 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-// --- CARICAMENTO AUTOMATICO DA GOOGLE DRIVE ---
+// --- CARICAMENTO AUTOMATICO DA DROPBOX ---
 window.addEventListener('DOMContentLoaded', () => {
-    const idFileDrive = "1wEwdxWRDtfQEzwu7_mwTii-oKRDJDR2B";
-    const urlDatabaseCloud = `https://docs.google.com/uc?export=view&id=${idFileDrive}`;
+    // 1. Incolli il link di condivisione di Dropbox
+    // 2. Ti assicuri che finisca tassativamente con 'raw=1' invece di 'dl=0'
+    const urlDatabaseCloud = "https://https://www.dropbox.com/scl/fi/4pzs0cf4jo2pt4qpjf95a/database_unione.csv?rlkey=0svptmn1bx0qcn9sjjznlf2z5&st=s32kf3nw&dl=1";
 
-    console.log("Tentativo di caricamento automatico da Google Drive...");
+    console.log("Tentativo di caricamento automatico da Dropbox...");
 
     fetch(urlDatabaseCloud)
         .then(response => {
             if (!response.ok) {
-                throw new Error("Risposta da Google Drive non valida (Stato: " + response.status + ")");
+                throw new Error("Risposta da Dropbox non valida (Stato: " + response.status + ")");
             }
             return response.text();
         })
         .then(datiCSV => {
-            if (datiCSV.trim().startsWith("<!DOCTYPE") || datiCSV.trim().startsWith("<html") || datiCSV.trim().startsWith("{")) {
-                throw new Error("Il file ricevuto non è un CSV valido. Controlla i permessi di condivisione.");
-            }
-
-            console.log("Database scaricato con successo da Google Drive!");
+            console.log("Database scaricato con successo da Dropbox!");
             
-            // 🧙‍♂️ IL TRUCCO: Creiamo un finto oggetto "input" che contiene il file CSV
+            // Usiamo lo stesso trucco del finto input per la tua funzione
             const fintoInput = {
                 files: [
                     new File([datiCSV], "monumenti.csv", { type: "text/csv" })
                 ]
             };
 
-            // Passiamo il finto input alla tua funzione originale
             caricaCSV(fintoInput); 
         })
         .catch(errore => {
             console.warn("Caricamento automatico fallito: ", errore);
-            console.log("Usa il pulsante carica file manuale se necessario.");
         });
-});
-// ----------------------------------------------
-// ----------------------------------------------
-// --------------------------------------------------
+});// --------------------------------------------------
 </script>
 
 </body>
