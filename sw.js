@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
     }
 self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith('http')) return;
-
+}
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       // Se il file (mappa o foto) è già in cache, lo restituisce subito
