@@ -1386,11 +1386,9 @@ if ('serviceWorker' in navigator) {
 }
 // --- CARICAMENTO AUTOMATICO DA DROPBOX ---
 window.addEventListener('DOMContentLoaded', () => {
-    // 1. Incolli il link di condivisione di Dropbox
-    // 2. Ti assicuri che finisca tassativamente con 'raw=1' invece di 'dl=0'
-    const urlDatabaseCloud = const urlDatabaseCloud = "https://www.dropbox.com/scl/fi/4pzs0cf4jo2pt4qpjf95a/database_unione.csv?rlkey=0svptmn1bx0qcn9sjjznlf2z5&raw=1";
-
     console.log("Tentativo di caricamento automatico da Dropbox...");
+
+    const urlDatabaseCloud = "https://www.dropbox.com/scl/fi/4pzs0cf4jo2pt4qpjf95a/database_unione.csv?rlkey=0svptmn1bx0qcn9sjjznlf2z5&raw=1";
 
     fetch(urlDatabaseCloud)
         .then(response => {
@@ -1402,19 +1400,22 @@ window.addEventListener('DOMContentLoaded', () => {
         .then(datiCSV => {
             console.log("Database scaricato con successo da Dropbox!");
             
-            // Usiamo lo stesso trucco del finto input per la tua funzione
+            // Creiamo il finto oggetto "input" per ingannare la tua funzione originale
             const fintoInput = {
                 files: [
                     new File([datiCSV], "monumenti.csv", { type: "text/csv" })
                 ]
             };
 
+            // Eseguiamo la tua funzione originale che disegna i marker
             caricaCSV(fintoInput); 
         })
         .catch(errore => {
             console.warn("Caricamento automatico fallito: ", errore);
+            console.log("Usa il pulsante carica file manuale se necessario.");
         });
-});// --------------------------------------------------
+});
+// -----
 </script>
 
 </body>
