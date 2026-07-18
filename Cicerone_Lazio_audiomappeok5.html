@@ -1384,23 +1384,24 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-// --- CARICAMENTO AUTOMATICO DA DROPBOX ---
+// --- CARICAMENTO AUTOMATICO DA DATABASE LOCALE GITHUB ---
 window.addEventListener('DOMContentLoaded', () => {
-    console.log("Tentativo di caricamento automatico da Dropbox...");
+    console.log("Tentativo di caricamento automatico dal database di GitHub...");
 
-    const urlDatabaseCloud = "https://www.dropbox.com/scl/fi/4pzs0cf4jo2pt4qpjf95a/database_unione.csv?rlkey=0svptmn1bx0qcn9sjjznlf2z5&raw=1";
+    // Non serve più un link esterno, puntiamo direttamente al file caricato nel progetto!
+    const urlDatabaseLocal = "./database_unione.csv";
 
-    fetch(urlDatabaseCloud)
+    fetch(urlDatabaseLocal)
         .then(response => {
             if (!response.ok) {
-                throw new Error("Risposta da Dropbox non valida (Stato: " + response.status + ")");
+                throw new Error("Impossibile trovare il file database_unione.csv su GitHub (Stato: " + response.status + ")");
             }
             return response.text();
         })
         .then(datiCSV => {
-            console.log("Database scaricato con successo da Dropbox!");
+            console.log("Database scaricato con successo da GitHub!");
             
-            // Creiamo il finto oggetto "input" per ingannare la tua funzione originale
+            // Creiamo il finto oggetto "input" per la tua funzione originale
             const fintoInput = {
                 files: [
                     new File([datiCSV], "monumenti.csv", { type: "text/csv" })
@@ -1415,7 +1416,7 @@ window.addEventListener('DOMContentLoaded', () => {
             console.log("Usa il pulsante carica file manuale se necessario.");
         });
 });
-// ----------------------------------------------
+// --------------------------------------------------------// ----------------------------------------------
 </script>
 
 </body>
