@@ -1050,9 +1050,9 @@ function attivaMappaDaItinerario() {
     // Calcoliamo la distanza approssimativa tra il punto più a nord e quello più a sud
     const nordSudDist = limitiMappa.getNorth() - limitiMappa.getSouth();
     
-    let zoomIniziale = 14;
-    let minZoomConsentito = 13;
-    let maxZoomConsentito = 15;
+    let zoomIniziale = 13;
+    let minZoomConsentito = 12;
+    let maxZoomConsentito = 14;
 
     // Se tutti i marker sono vicinissimi tra loro (es. meno di 1 km, tipico di un centro storico cittadino come Rieti)
     if (nordSudDist < 0.015) {
@@ -1063,7 +1063,7 @@ function attivaMappaDaItinerario() {
         // Se i marker sono molto distanti tra loro (itinerario extraurbano come la Conca)
         zoomIniziale = 13; // Vista d'insieme più ampia!
         minZoomConsentito = 12;
-        maxZoomConsentito = 15;
+        maxZoomConsentito = 14;
     }
 
     // 3. Inizializziamo la mappa con i limiti dinamici appena calcolati
